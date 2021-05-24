@@ -11,6 +11,7 @@
 			#pragma vertex vert
 			#pragma fragment frag
 			#include "UnityCG.cginc"
+			#include "UnityLightingCommon.cginc"
 
 			struct appdata
 			{
@@ -32,8 +33,8 @@
 				return o;
 			}
 
-#define STEPS 128
-#define STEP_SIZE 0.01
+			#define STEPS 128
+			#define STEP_SIZE 0.01
 
 			bool SphereHit(float3 p, float3 center, float radius) {
 				return distance(p, center) < radius;
@@ -59,8 +60,12 @@
 				float3 worldPos = i.wPos;
 				float3 depth = RaymarchHIt(worldPos, viewDir);
 
+				half3 worldNormal = depth - float3(0, 0, 0);
+				half nl = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
+
 				if (length(depth) != 0) {
-					return fixed4(depth.x, depth.y, depth.z, 1);
+					depth *= nl * _LightColor0;
+					return fixed4(depth, 1);
 				}
 				else {
 					return fixed4(1, 1, 1, 0);
