@@ -1,6 +1,14 @@
 ﻿Shader "Jung/PrimitiveSphere"
 {
-	SubShader
+	Properties
+	{
+		_Steps("Steps", Range(0.1, 300)) = 128
+		_StepSize("Step Size", Range(0.001, 5)) = 0.01
+		_SpherePos("Sphere Pos", Vector) = (0, 0, 0, 1)
+		_SphereRadius("Sphere Radius", Range(0.1, 5)) = 1
+	}
+
+		SubShader
 	{
 		Tags { "Queue" = "Transparent" }
 		Blend SrcAlpha OneMinusSrcAlpha
@@ -33,8 +41,10 @@
 				return o;
 			}
 
-			#define STEPS 128
-			#define STEP_SIZE 0.01
+			float _Steps;
+			float _StepSize;
+			float4 _SpherePos;
+			float _SphereRadius;
 
 			bool SphereHit(float3 p, float3 center, float radius) {
 				return distance(p, center) < radius;
@@ -42,13 +52,13 @@
 
 			float3 RaymarchHIt(float3 position, float3 direction)
 			{
-				for (int i = 0; i < STEPS; i++)
+				for (int i = 0; i < _Steps; i++)
 				{
-					if (SphereHit(position, float3(0, 0, 0), 0.5)) {
+					if (SphereHit(position, _SpherePos.xyz, _SphereRadius)) {
 						return position; // the depth in which we hit
 					}
 
-					position += direction * STEP_SIZE;
+					position += direction * _StepSize;
 				}
 
 				return float3(0, 0, 0); // didn't hit anything
@@ -60,7 +70,7 @@
 				float3 worldPos = i.wPos;
 				float3 depth = RaymarchHIt(worldPos, viewDir);
 
-				half3 worldNormal = depth - float3(0, 0, 0);
+				half3 worldNormal = depth - _SpherePos;
 				half nl = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
 
 				if (length(depth) != 0) {
